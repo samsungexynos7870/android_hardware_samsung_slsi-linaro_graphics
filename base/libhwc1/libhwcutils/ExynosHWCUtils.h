@@ -141,8 +141,6 @@ uint32_t hwcApiVersion(const hwc_composer_device_1_t* hwc);
 uint32_t hwcHeaderVersion(const hwc_composer_device_1_t* hwc);
 bool hwcHasApiVersion(const hwc_composer_device_1_t* hwc, uint32_t version);
 
-uint32_t halDataSpaceToV4L2ColorSpace(uint32_t data_space);
-unsigned int isNarrowRgb(int format, uint32_t data_space);
 int HAL_PIXEL_FORMAT_2_V4L2_PIX(int hal_pixel_format);
 int V4L2_PIX_2_YUV_INFO(unsigned int v4l2_pixel_format,
         unsigned int * bpp, unsigned int * planes);

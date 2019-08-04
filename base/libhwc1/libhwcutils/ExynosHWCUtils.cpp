@@ -280,12 +280,7 @@ bool isUHD(const hwc_layer_1_t &layer)
 bool isFullRangeColor(const hwc_layer_1_t &layer)
 {
     private_handle_t *handle = private_handle_t::dynamicCast(layer.handle);
-    if (!isFormatRgb(handle->format)) {
-        uint32_t data_space_range = (layer.dataSpace & HAL_DATASPACE_RANGE_MASK);
-        if (data_space_range == HAL_DATASPACE_RANGE_FULL)
-            return true;
-    }
-    return 0;
+    return (handle->format == HAL_PIXEL_FORMAT_EXYNOS_YCrCb_420_SP_M_FULL);
 }
 
 bool isCompressed(const hwc_layer_1_t &layer)
@@ -461,37 +456,6 @@ void adjustRect(hwc_rect_t &rect, int32_t width, int32_t height)
         rect.bottom = rect.top;
     if (rect.bottom > height)
         rect.bottom = height;
-}
-
-uint32_t halDataSpaceToV4L2ColorSpace(uint32_t __unused data_space)
-{
-    uint32_t standard_data_space = (data_space & HAL_DATASPACE_STANDARD_MASK);
-    switch (standard_data_space) {
-        case HAL_DATASPACE_STANDARD_BT2020:
-        case HAL_DATASPACE_STANDARD_BT2020_CONSTANT_LUMINANCE:
-            return V4L2_COLORSPACE_BT2020;
-        case HAL_DATASPACE_STANDARD_DCI_P3:
-            return V4L2_COLORSPACE_DCI_P3;
-        default:
-            return V4L2_COLORSPACE_DEFAULT;
-    }
-    return V4L2_COLORSPACE_DEFAULT;
-}
-
-unsigned int isNarrowRgb(int format, uint32_t __unused data_space)
-{
-    if (isFormatRgb(format))
-        return 0;
-    else {
-        uint32_t data_space_range = (data_space & HAL_DATASPACE_RANGE_MASK);
-        if (data_space_range == HAL_DATASPACE_RANGE_UNSPECIFIED) {
-            return 1;
-        } else if (data_space_range == HAL_DATASPACE_RANGE_FULL) {
-            return 0;
-        } else {
-            return 1;
-        }
-    }
 }
 
 int HAL_PIXEL_FORMAT_2_V4L2_PIX(
