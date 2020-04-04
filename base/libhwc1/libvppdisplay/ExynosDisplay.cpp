@@ -1106,7 +1106,7 @@ bool ExynosDisplay::isOverlaySupported(hwc_layer_1_t &layer, size_t index, bool 
             (WIDTH(extMPPOutLayer.displayFrame) % mCheckIntMPP->getCropWidthAlign(layer) != 0 ||
              HEIGHT(extMPPOutLayer.displayFrame) % mCheckIntMPP->getCropHeightAlign(layer) != 0 ||
              !(mCheckIntMPP->isFormatSupportedByMPP(handleFormat)) ||
-             !(mCheckIntMPP->isCSCSupportedByMPP(handleFormat, HAL_PIXEL_FORMAT_RGBX_8888, layer.dataSpace))))
+             !(mCheckIntMPP->isCSCSupportedByMPP(handleFormat, HAL_PIXEL_FORMAT_RGBX_8888, 1))))
             dst_format = mExternalMPPDstFormat;
 
         /* extMPPOutLayer is output of ExtMPP */
@@ -1146,7 +1146,7 @@ bool ExynosDisplay::isOverlaySupported(hwc_layer_1_t &layer, size_t index, bool 
                     (WIDTH(extMPPTempOutLayer.displayFrame) % internalMPP->getCropWidthAlign(layer) != 0 ||
                      HEIGHT(extMPPTempOutLayer.displayFrame) % internalMPP->getCropHeightAlign(layer) != 0 ||
                      !(internalMPP->isFormatSupportedByMPP(handleFormat)) ||
-                     !(mCheckIntMPP->isCSCSupportedByMPP(handleFormat, HAL_PIXEL_FORMAT_RGBX_8888, layer.dataSpace))))
+                     !(mCheckIntMPP->isCSCSupportedByMPP(handleFormat, HAL_PIXEL_FORMAT_RGBX_8888, 1))))
                     dst_format = mExternalMPPDstFormat;
 
                 extMPPTempOutLayer.sourceCropf.left = extMPPOutLayer.displayFrame.left;
@@ -1158,7 +1158,6 @@ bool ExynosDisplay::isOverlaySupported(hwc_layer_1_t &layer, size_t index, bool 
                 extMPPTempOutLayer.displayFrame.right = layer.displayFrame.right;
                 extMPPTempOutLayer.displayFrame.bottom = layer.displayFrame.bottom;
                 ((private_handle_t *)extMPPTempOutLayer.handle)->format = dst_format;
-                extMPPTempOutLayer.dataSpace = 0;
                 extMPPTempOutLayer.transform = 0;
             }
             ExynosDisplay *addedDisplay = (mHwc->hdmi_hpd ? (ExynosDisplay *)mHwc->externalDisplay : (ExynosDisplay *)mHwc->virtualDisplay);
@@ -1255,7 +1254,6 @@ bool ExynosDisplay::isOverlaySupported(hwc_layer_1_t &layer, size_t index, bool 
             extMPPOutLayer.sourceCropf.right = layer.displayFrame.right;
             extMPPOutLayer.sourceCropf.bottom = layer.displayFrame.bottom;
             extMPPOutLayer.transform = 0;
-            extMPPOutLayer.dataSpace = 0;
             if (handle)
                 ((private_handle_t *)extMPPOutLayer.handle)->format = dst_format;
             ExynosMPPModule* internalMPP = mInternalMPPs[i];
@@ -3114,7 +3112,7 @@ int ExynosDisplay::postMPPM2M(hwc_layer_1_t &layer, struct decon_win_config *con
         (isFormatRgb(handle->format) ||
         (bothMPPUsed && !isFormatRgb(handle->format) &&
          exynosInternalMPP != NULL &&
-         exynosInternalMPP->isCSCSupportedByMPP(handle->format, HAL_PIXEL_FORMAT_RGBX_8888, layer.dataSpace) &&
+         exynosInternalMPP->isCSCSupportedByMPP(handle->format, HAL_PIXEL_FORMAT_RGBX_8888, 1) &&
          exynosInternalMPP->isFormatSupportedByMPP(handle->format) &&
          WIDTH(extMPPOutLayer.displayFrame) % exynosInternalMPP->getCropWidthAlign(layer) == 0 &&
          HEIGHT(extMPPOutLayer.displayFrame) % exynosInternalMPP->getCropHeightAlign(layer) == 0)))
