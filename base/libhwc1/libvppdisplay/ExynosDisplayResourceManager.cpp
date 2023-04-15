@@ -5,7 +5,9 @@
 #include "ExynosMPPModule.h"
 #include "ExynosPrimaryDisplay.h"
 #include "ExynosExternalDisplay.h"
+#ifdef USES_VIRTUAL_DISPLAY
 #include "ExynosVirtualDisplay.h"
+#endif
 #include "ExynosHWCDebug.h"
 
 ExynosMPPVector::ExynosMPPVector() {
@@ -64,7 +66,9 @@ ExynosDisplayResourceManager::ExynosDisplayResourceManager(struct exynos5_hwc_co
 #endif
 #endif
     mHwc->externalDisplay->mUseSecureDMA = false;
+#ifdef USES_VIRTUAL_DISPLAY
     mHwc->virtualDisplay->mUseSecureDMA = false;
+#endif
     ExynosMPP::mainDisplayWidth = mHwc->primaryDisplay->mXres;
     if (ExynosMPP::mainDisplayWidth <= 0) {
         ExynosMPP::mainDisplayWidth = 1440;
@@ -100,7 +104,9 @@ void ExynosDisplayResourceManager::addExternalMpp(hwc_display_contents_1_t** con
 {
     hwc_display_contents_1_t *fimd_contents = contents[HWC_DISPLAY_PRIMARY];
     hwc_display_contents_1_t *hdmi_contents = contents[HWC_DISPLAY_EXTERNAL];
+#ifdef USES_VIRTUAL_DISPLAY
     hwc_display_contents_1_t *virtual_contents = contents[HWC_DISPLAY_VIRTUAL];
+#endif
 
     hwc_display_contents_1_t *secondary_contents = hdmi_contents;
     ExynosDisplay* secondary_display = mHwc->externalDisplay;
@@ -121,6 +127,7 @@ void ExynosDisplayResourceManager::addExternalMpp(hwc_display_contents_1_t** con
         secondary_display->mExternalMPPs.add(exynosMPP);
     }
 
+#ifdef USES_VIRTUAL_DISPLAY
     if (virtual_contents) {
         exynosMPP = (ExynosMPPModule *)mExternalMPPs[WFD_EXT_MPP_IDX];
         mHwc->virtualDisplay->mExternalMPPs.add(exynosMPP);
@@ -138,6 +145,7 @@ void ExynosDisplayResourceManager::addExternalMpp(hwc_display_contents_1_t** con
         mHwc->virtualDisplay->mExternalMPPs.add(exynosMPP);
 #endif
     }
+#endif
 }
 
 void ExynosDisplayResourceManager::addUnAssignedIntMpp(ExynosDisplay *display)
@@ -223,6 +231,7 @@ void ExynosDisplayResourceManager::printDisplyInfos(size_t type)
         mHwc->externalDisplay->dumpMPPs(result);
         HDEBUGLOGD(eDebugResourceManager, "%s", result.string());
     }
+#ifdef USES_VIRTUAL_DISPLAY
     else if (type == EXYNOS_VIRTUAL_DISPLAY) {
         HDEBUGLOGD(eDebugResourceManager, "Virtual display");
         result.clear();
@@ -233,6 +242,7 @@ void ExynosDisplayResourceManager::printDisplyInfos(size_t type)
         mHwc->virtualDisplay->dumpMPPs(result);
         HDEBUGLOGD(eDebugResourceManager, "%s", result.string());
     }
+#endif
 }
 
 void ExynosDisplayResourceManager::doPreProcessing(hwc_display_contents_1_t* contents, ExynosDisplay* display,
@@ -329,17 +339,23 @@ int ExynosDisplayResourceManager::assignResources(size_t numDisplays, hwc_displa
 
     hwc_display_contents_1_t *fimd_contents = displays[HWC_DISPLAY_PRIMARY];
     hwc_display_contents_1_t *hdmi_contents = displays[HWC_DISPLAY_EXTERNAL];
+#ifdef USES_VIRTUAL_DISPLAY
     hwc_display_contents_1_t *virtual_contents = displays[HWC_DISPLAY_VIRTUAL];
+#endif
 
     hwc_display_contents_1_t *secondary_contents = hdmi_contents;
     ExynosDisplay* secondary_display = mHwc->externalDisplay;
 
     int primary_previous_drm_dma = -1;
     int secondary_previous_drm_dma = -1;
+#ifdef USES_VIRTUAL_DISPLAY
     int virtual_previous_drm_dma = -1;
+#endif
     ExynosMPPModule *previousDRMInternalMPPPrimary = NULL;
     ExynosMPPModule *previousDRMInternalMPPSecondary = NULL;
+#ifdef USES_VIRTUAL_DISPLAY
     ExynosMPPModule *previousDRMInternalMPPVirtual = NULL;
+#endif
 
     if ((mHwc->hdmi_hpd == false) && (mHwc->externalDisplay->isIONBufferAllocated())) {
         bool noExtVideoBuffer = true;
@@ -369,9 +385,11 @@ int ExynosDisplayResourceManager::assignResources(size_t numDisplays, hwc_displa
     if (secondary_contents) {
         doPreProcessing(secondary_contents, secondary_display, &secondary_previous_drm_dma, &previousDRMInternalMPPSecondary);
     }
+#ifdef USES_VIRTUAL_DISPLAY
     if (virtual_contents) {
         doPreProcessing(virtual_contents, mHwc->virtualDisplay, &virtual_previous_drm_dma, &previousDRMInternalMPPVirtual);
     }
+#endif
 
     preAssignResource();
     addExternalMpp(displays);
@@ -386,10 +404,12 @@ int ExynosDisplayResourceManager::assignResources(size_t numDisplays, hwc_displa
                 secondary_previous_drm_dma, previousDRMInternalMPPSecondary, false);
     }
 
+#ifdef USES_VIRTUAL_DISPLAY
     if (virtual_contents) {
         handleHighPriorityLayers(virtual_contents, mHwc->virtualDisplay,
                 virtual_previous_drm_dma, previousDRMInternalMPPVirtual, false);
     }
+#endif
 
     if (fimd_contents) {
         handleLowPriorityLayers(fimd_contents, mHwc->primaryDisplay);
@@ -405,9 +425,11 @@ int ExynosDisplayResourceManager::assignResources(size_t numDisplays, hwc_displa
         handleLowPriorityLayers(secondary_contents, secondary_display);
     }
 
+#ifdef USES_VIRTUAL_DISPLAY
     if (virtual_contents) {
         handleLowPriorityLayers(virtual_contents, mHwc->virtualDisplay);
     }
+#endif
 
     return 0;
 }

@@ -43,8 +43,10 @@ public:
 
     DECLARE_META_INTERFACE(ExynosHWCService);
 
+#ifdef USES_VIRTUAL_DISPLAY
     virtual int addVirtualDisplayDevice() = 0;
     virtual int destroyVirtualDisplayDevice() = 0;
+#endif
 
     /*
      * setWFDMode() function sets the WFD operation Mode.

@@ -528,18 +528,22 @@ void ExynosExternalDisplay::closeHdmi()
 void ExynosExternalDisplay::setHdmiStatus(bool status)
 {
     if (status) {
+#if defined(USES_VIRTUAL_DISPLAY)
         char value[PROPERTY_VALUE_MAX];
         property_get("wlan.wfd.status", value, "disconnected");
         bool bWFDDisconnected = !strcmp(value, "disconnected");
 
         if (bWFDDisconnected) {
-            if (mEnabled == false && mHwc->mS3DMode != S3D_MODE_DISABLED)
-                mHwc->mHdmiResolutionChanged = true;
+#endif
+        if (mEnabled == false && mHwc->mS3DMode != S3D_MODE_DISABLED)
+            mHwc->mHdmiResolutionChanged = true;
 
-            if (mEnabled == false)
-                requestIONMemory();
-            enable();
+        if (mEnabled == false)
+            requestIONMemory();
+        enable();
+#if defined(USES_VIRTUAL_DISPLAY)
         }
+#endif
     } else {
         disable();
         closeHdmi();

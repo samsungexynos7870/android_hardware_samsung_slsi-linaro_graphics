@@ -29,9 +29,13 @@
 namespace android {
 
 enum {
+#ifdef USES_VIRTUAL_DISPLAY
     ADD_VIRTUAL_DISPLAY_DEVICE = 0,
     DESTROY_VIRTUAL_DISPLAY_DEVICE,
     SET_WFD_MODE,
+#else
+    SET_WFD_MODE = 0,
+#endif
     SET_WFD_OUTPUT_RESOLUTION,
     SET_VDS_GLES_FORMAT,
     SET_EXT_FB_MODE,
@@ -89,6 +93,7 @@ public:
     {
     }
 
+#ifdef USES_VIRTUAL_DISPLAY
     virtual int addVirtualDisplayDevice()
     {
         Parcel data, reply;
@@ -106,6 +111,7 @@ public:
         result = reply.readInt32();
         return result;
     }
+#endif
 
     virtual int setWFDMode(unsigned int mode)
     {
@@ -454,6 +460,7 @@ status_t BnExynosHWCService::onTransact(
     uint32_t code, const Parcel& data, Parcel* reply, uint32_t flags)
 {
     switch(code) {
+#ifdef USES_VIRTUAL_DISPLAY
         case ADD_VIRTUAL_DISPLAY_DEVICE: {
             CHECK_INTERFACE(IExynosHWCService, data, reply);
             int res = addVirtualDisplayDevice();
@@ -466,6 +473,7 @@ status_t BnExynosHWCService::onTransact(
             reply->writeInt32(res);
             return NO_ERROR;
         } break;
+#endif
         case SET_WFD_MODE: {
             CHECK_INTERFACE(IExynosHWCService, data, reply);
             int mode = data.readInt32();

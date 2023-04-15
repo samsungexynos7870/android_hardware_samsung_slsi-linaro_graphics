@@ -38,7 +38,9 @@ class ExynosHWCService;
 #include "ExynosOverlayDisplay.h"
 #include "ExynosExternalDisplayModule.h"
 #include "ExynosPrimaryDisplay.h"
+#ifdef USES_VIRTUAL_DISPLAY
 #include "ExynosVirtualDisplayModule.h"
+#endif
 
 void doPSRExit(struct exynos5_hwc_composer_device_1_t *pdev)
 {
@@ -94,12 +96,14 @@ int exynos5_prepare(hwc_composer_device_1_t *dev,
     hwc_display_contents_1_t *fimd_contents = displays[HWC_DISPLAY_PRIMARY];
 
     hwc_display_contents_1_t *hdmi_contents = displays[HWC_DISPLAY_EXTERNAL];
+#ifdef USES_VIRTUAL_DISPLAY
     hwc_display_contents_1_t *virtual_contents = displays[HWC_DISPLAY_VIRTUAL];
     if (virtual_contents == NULL)
         pdev->virtualDisplay->deInit();
 #ifdef USES_VIRTUAL_DISPLAY_DECON_EXT_WB
     if (virtual_contents)
         pdev->virtualDisplay->init(virtual_contents);
+#endif
 #endif
     pdev->updateCallCnt++;
     pdev->update_event_cnt++;
@@ -134,6 +138,7 @@ int exynos5_prepare(hwc_composer_device_1_t *dev,
             return err;
     }
 
+#ifdef USES_VIRTUAL_DISPLAY
     if (virtual_contents) {
 #ifdef USES_VIRTUAL_DISPLAY_DECON_EXT_WB
         ExynosVirtualDisplayModule *virDisplay = (ExynosVirtualDisplayModule *)pdev->virtualDisplay;
@@ -143,6 +148,7 @@ int exynos5_prepare(hwc_composer_device_1_t *dev,
         if (err)
             return err;
     }
+#endif
 
     return 0;
 }
@@ -158,8 +164,11 @@ int exynos5_set(struct hwc_composer_device_1 *dev,
             (exynos5_hwc_composer_device_1_t *)dev;
     hwc_display_contents_1_t *fimd_contents = displays[HWC_DISPLAY_PRIMARY];
     hwc_display_contents_1_t *hdmi_contents = displays[HWC_DISPLAY_EXTERNAL];
+#ifdef USES_VIRTUAL_DISPLAY
     hwc_display_contents_1_t *virtual_contents = displays[HWC_DISPLAY_VIRTUAL];
-    int fimd_err = 0, hdmi_err = 0, virtual_err = 0;
+    int virtual_err = 0;
+#endif
+    int fimd_err = 0, hdmi_err = 0;
 
     if (fimd_contents) {
         android::Mutex::Autolock lock(pdev->primaryDisplay->mLayerInfoMutex);
@@ -196,8 +205,10 @@ int exynos5_set(struct hwc_composer_device_1 *dev,
 #endif
     }
 
+#ifdef USES_VIRTUAL_DISPLAY
     if (virtual_contents && fimd_contents)
         virtual_err = pdev->virtualDisplay->set(virtual_contents);
+#endif
 
 #ifdef EXYNOS_SUPPORT_PSR_EXIT
     pdev->notifyPSRExit = true;
@@ -214,10 +225,14 @@ int exynos5_set(struct hwc_composer_device_1 *dev,
     if (fimd_err)
         return fimd_err;
 
+#ifndef USES_VIRTUAL_DISPLAY
+    return hdmi_err;
+#else
     if (hdmi_err)
         return hdmi_err;
 
     return virtual_err;
+#endif
 }
 
 void exynos5_registerProcs(struct hwc_composer_device_1* dev,
@@ -242,10 +257,12 @@ int exynos5_query(struct hwc_composer_device_1* dev, int what, int *value)
         // vsync period in nanosecond
         value[0] = pdev->primaryDisplay->mVsyncPeriod;
         break;
+#ifdef USES_VIRTUAL_DISPLAY
     case HWC_DISPLAY_TYPES_SUPPORTED:
         // support virtual display
         value[0] |= HWC_DISPLAY_VIRTUAL_BIT;
         break;
+#endif
     default:
         // unsupported query
         return -EINVAL;
@@ -636,6 +653,7 @@ int exynos5_getDisplayConfigs(struct hwc_composer_device_1 *dev,
             return -EINVAL;
         }
         return 0;
+#ifdef USES_VIRTUAL_DISPLAY
     } else if (disp == HWC_DISPLAY_VIRTUAL) {
         int err = pdev->virtualDisplay->getConfig();
         if (err) {
@@ -644,6 +662,7 @@ int exynos5_getDisplayConfigs(struct hwc_composer_device_1 *dev,
         configs[0] = 0;
         *numConfigs = 1;
         return 0;
+#endif
     }
 
     return -EINVAL;
@@ -687,8 +706,10 @@ int exynos5_getDisplayAttributes(struct hwc_composer_device_1 *dev,
             else
                 values[i] = exynos5_hdmi_attribute(pdev, attributes[i]);
         }
+#ifdef USES_VIRTUAL_DISPLAY
         else if (disp == HWC_DISPLAY_VIRTUAL)
             values[i] = pdev->virtualDisplay->getDisplayAttributes(attributes[i]);
+#endif
         else {
             ALOGE("unknown display type %u", disp);
             return -EINVAL;
@@ -885,8 +906,9 @@ int exynos5_open(const struct hw_module_t *module, const char *name,
 
     dev->primaryDisplay = new ExynosPrimaryDisplay(NUM_GSC_UNITS, dev);
     dev->externalDisplay = new ExynosExternalDisplayModule(dev);
+#ifdef USES_VIRTUAL_DISPLAY
     dev->virtualDisplay = new ExynosVirtualDisplayModule(dev);
-
+#endif
     if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID,
             (const struct hw_module_t **)&dev->primaryDisplay->mGrallocModule)) {
         ALOGE("failed to get gralloc hw module");
@@ -901,7 +923,9 @@ int exynos5_open(const struct hw_module_t *module, const char *name,
         goto err_get_module;
     }
     dev->externalDisplay->mAllocDevice = dev->primaryDisplay->mAllocDevice;
+#ifdef USES_VIRTUAL_DISPLAY
     dev->virtualDisplay->mAllocDevice = dev->primaryDisplay->mAllocDevice;
+#endif
 
 #ifdef HDMI_PRIMARY_DISPLAY
     dev->primaryDisplay->mDisplayFd = open("/dev/graphics/fb2", O_RDWR);

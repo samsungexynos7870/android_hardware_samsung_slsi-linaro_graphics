@@ -21,7 +21,9 @@
 #ifdef USES_VPP
 #include "ExynosPrimaryDisplay.h"
 #endif
+#ifdef USES_VIRTUAL_DISPLAY
 #include "ExynosVirtualDisplay.h"
+#endif
 
 #define HWC_SERVICE_DEBUG 0
 
@@ -76,31 +78,43 @@ int ExynosHWCService::destroyVirtualDisplayDevice()
 
 int ExynosHWCService::setWFDMode(unsigned int mode)
 {
+#ifdef USES_VIRTUAL_DISPLAY
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s::mode=%d", __func__, mode);
 
     mHWCCtx->virtualDisplay->mIsWFDState = !!mode;
 
     return NO_ERROR;
+#else
+    return INVALID_OPERATION;
+#endif
 }
 
 int ExynosHWCService::setWFDOutputResolution(unsigned int width, unsigned int height)
 {
+#ifdef USES_VIRTUAL_DISPLAY
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s::width=%d, height=%d", __func__, width, height);
 
     ExynosVirtualDisplay *virDisplay = (ExynosVirtualDisplay *)mHWCCtx->virtualDisplay;
     virDisplay->setWFDOutputResolution(width, height, width, height);
 
     return NO_ERROR;
+#else
+    return INVALID_OPERATION;
+#endif
 }
 
 int ExynosHWCService::setVDSGlesFormat(int format)
 {
+#ifdef USES_VIRTUAL_DISPLAY
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s::format=%d", __func__, format);
 
     ExynosVirtualDisplay *virDisplay = (ExynosVirtualDisplay *)mHWCCtx->virtualDisplay;
     virDisplay->setVDSGlesFormat(format);
 
     return NO_ERROR;
+#else
+    return INVALID_OPERATION;
+#endif
 }
 
 void ExynosHWCService::setWFDSleepCtrl(bool __unused black)
@@ -148,9 +162,9 @@ int ExynosHWCService::setExternalDisplayPause(bool onoff)
 int ExynosHWCService::setDispOrientation(unsigned int transform)
 {
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s::mode=%x", __func__, transform);
-
+#ifdef USES_VIRTUAL_DISPLAY
     mHWCCtx->virtualDisplay->mDeviceOrientation = transform;
-
+#endif
     return NO_ERROR;
 }
 
@@ -179,7 +193,9 @@ int ExynosHWCService::setExternalUITransform(unsigned int transform)
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s::transform=%d", __func__, transform);
 
     mHWCCtx->ext_fbt_transform = transform;
+#ifdef USES_VIRTUAL_DISPLAY
     mHWCCtx->virtualDisplay->mFrameBufferTargetTransform = transform;
+#endif
     mHWCCtx->procs->invalidate(mHWCCtx->procs);
 
     return NO_ERROR;
@@ -188,8 +204,11 @@ int ExynosHWCService::setExternalUITransform(unsigned int transform)
 int ExynosHWCService::getExternalUITransform(void)
 {
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s", __func__);
-
+#ifdef USES_VIRTUAL_DISPLAY
     return mHWCCtx->virtualDisplay->mFrameBufferTargetTransform;
+#else
+    return mHWCCtx->ext_fbt_transform;
+#endif
 }
 
 int ExynosHWCService::setWFDOutputTransform(unsigned int transform)
@@ -203,7 +222,7 @@ int ExynosHWCService::getWFDOutputTransform(void)
     return INVALID_OPERATION;
 }
 
-void ExynosHWCService::setHdmiResolution(int resolution, int s3dMode)
+void ExynosHWCService::setHdmiResolution(int resolution __unused, int s3dMode __unused)
 {
 #ifndef HDMI_INCAPABLE
     if (resolution == 0)
@@ -284,30 +303,41 @@ void ExynosHWCService::setHdmiSubtitles(bool use)
 void ExynosHWCService::setPresentationMode(bool use)
 {
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s::PresentationMode=%s", __func__, use == false ? "false" : "true");
-
+#ifdef USES_VIRTUAL_DISPLAY
     mHWCCtx->virtualDisplay->mPresentationMode = !!use;
+#endif
 }
 
 int ExynosHWCService::getWFDInfo(int32_t* state, int32_t* compositionType, int32_t* format,
     int64_t *usage, int32_t* width, int32_t* height)
 {
+#ifdef USES_VIRTUAL_DISPLAY
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s", __func__);
     if (mHWCCtx->virtualDisplay) {
         return mHWCCtx->virtualDisplay->getWFDInfo(state, compositionType, format,
                    usage, width, height);
     }
+#endif
     return INVALID_OPERATION;
 }
 
 int ExynosHWCService::getWFDMode()
 {
+#ifdef USES_VIRTUAL_DISPLAY
     return mHWCCtx->virtualDisplay->mIsWFDState;
+#endif
+    return INVALID_OPERATION;
 }
 
 void ExynosHWCService::getWFDOutputResolution(unsigned int *width, unsigned int *height)
 {
+#ifdef USES_VIRTUAL_DISPLAY
     *width  = mHWCCtx->virtualDisplay->mWidth;
     *height = mHWCCtx->virtualDisplay->mHeight;
+#else
+    *width  = 0;
+    *height = 0;
+#endif
 }
 
 int ExynosHWCService::getWFDOutputInfo(int __unused *fd1, int __unused *fd2, struct wfd_layer_t __unused *wfd_info)
@@ -317,10 +347,14 @@ int ExynosHWCService::getWFDOutputInfo(int __unused *fd1, int __unused *fd2, str
 
 int ExynosHWCService::getPresentationMode()
 {
+#ifdef USES_VIRTUAL_DISPLAY
     return mHWCCtx->virtualDisplay->mPresentationMode;
+#else
+    return INVALID_OPERATION;
+#endif
 }
 
-void ExynosHWCService::getHdmiResolution(uint32_t *width, uint32_t *height)
+void ExynosHWCService::getHdmiResolution(uint32_t *width __unused, uint32_t *height __unused)
 {
 #ifndef HDMI_INCAPABLE
     switch (mHWCCtx->mHdmiCurrentPreset) {

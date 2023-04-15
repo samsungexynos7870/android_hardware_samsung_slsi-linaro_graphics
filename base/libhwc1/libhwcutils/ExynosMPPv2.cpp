@@ -3,7 +3,9 @@
 #include <utils/Trace.h>
 #include "ExynosMPPv2.h"
 #include "ExynosHWCUtils.h"
+#ifdef USES_VIRTUAL_DISPLAY
 #include "ExynosVirtualDisplay.h"
+#endif
 #include "ExynosHWCDebug.h"
 
 int ExynosMPP::mainDisplayWidth = 0;
@@ -844,7 +846,10 @@ int ExynosMPP::processM2M(hwc_layer_1_t &layer, int dstFormat, hwc_frect_t *sour
     ATRACE_CALL();
     HDEBUGLOGD(eDebugMPP, "configuring mType(%u) mIndex(%u) for memory-to-memory", mType, mIndex);
 
+#ifdef USES_VIRTUAL_DISPLAY
     alloc_device_t* allocDevice = mAllocDevice;
+#endif
+
     private_handle_t *srcHandle = private_handle_t::dynamicCast(layer.handle);
     buffer_handle_t dstBuf;
     private_handle_t *dstHandle;
@@ -887,6 +892,7 @@ int ExynosMPP::processM2M(hwc_layer_1_t &layer, int dstFormat, hwc_frect_t *sour
          mBufferType != getBufferType(srcHandle->flags) ||
          ((dstImg.w != mDstConfig.w) || (dstImg.h != mDstConfig.h)));
 
+#ifdef USES_VIRTUAL_DISPLAY
     if (!needBufferAlloc) {
         dstImg.x = mDisplay->mHwc->mVirtualDisplayRect.left;
         dstImg.y = mDisplay->mHwc->mVirtualDisplayRect.top;
@@ -895,8 +901,11 @@ int ExynosMPP::processM2M(hwc_layer_1_t &layer, int dstFormat, hwc_frect_t *sour
         /* WFD can use MSC for blending or scaling. recofigure is required on WFD */
         reconfigure = true;
     }
+#endif
 
+#ifdef USES_VIRTUAL_DISPLAY
     if (needBufferAlloc) {
+#endif
         if (reconfigure && (mMidRealloc || mDstRealloc)) {
             if (getDrmMode(srcHandle->flags) != NO_DRM &&
                 mDisplay != NULL && mDisplay->mType == EXYNOS_EXTERNAL_DISPLAY)
@@ -925,6 +934,7 @@ int ExynosMPP::processM2M(hwc_layer_1_t &layer, int dstFormat, hwc_frect_t *sour
 
         if ((ret = reallocateBuffers(srcHandle, dstImg, midImg, needDoubleOperation, mCurrentBuf)) < 0)
             goto err_alloc;
+#ifdef USES_VIRTUAL_DISPLAY
     } else {
         if (reconfigure && needDoubleOperation) {
             int dstStride;
@@ -953,6 +963,7 @@ int ExynosMPP::processM2M(hwc_layer_1_t &layer, int dstFormat, hwc_frect_t *sour
             }
         }
     }
+#endif
 
     layer.acquireFenceFd = -1;
     if (needDoubleOperation) {
@@ -1062,8 +1073,11 @@ err_gsc_config:
 err_alloc:
     if (srcImg.acquireFenceFd >= 0)
         close(srcImg.acquireFenceFd);
+#ifdef USES_VIRTUAL_DISPLAY
     if (needBufferAlloc) {
+#endif
         freeBuffersCloseFences();
+#ifdef USES_VIRTUAL_DISPLAY
     } else {
         if (mMidBuffers[0]) {
             android::Mutex::Autolock lock(mMutex);
@@ -1079,6 +1093,7 @@ err_alloc:
         }
         mMidBufFence[0] = -1;
     }
+#endif
 
     {
         android::Mutex::Autolock lock(mMutex);
