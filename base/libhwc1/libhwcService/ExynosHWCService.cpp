@@ -54,6 +54,7 @@ ExynosHWCService::~ExynosHWCService()
    ALOGD_IF(HWC_SERVICE_DEBUG, "ExynosHWCService Destructor is called");
 }
 
+#ifdef USES_VIRTUAL_DISPLAY
 int ExynosHWCService::addVirtualDisplayDevice()
 {
     ALOGD_IF(HWC_SERVICE_DEBUG, "%s", __func__);
@@ -75,6 +76,7 @@ int ExynosHWCService::destroyVirtualDisplayDevice()
 
     return NO_ERROR;
 }
+#endif
 
 int ExynosHWCService::setWFDMode(unsigned int mode)
 {
