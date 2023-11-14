@@ -17,6 +17,8 @@
 
 #include "hwjpeg-internal.h"
 #include "LibScalerForJpeg.h"
+#include <fcntl.h>
+#include <unistd.h>
 
 #define SCALER_DEV_NODE "/dev/video50"
 
