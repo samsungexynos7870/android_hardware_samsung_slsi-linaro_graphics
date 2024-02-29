@@ -24,8 +24,6 @@ class ExynosResourceManagerModule : public ExynosResourceManager {
         ExynosResourceManagerModule();
         ~ExynosResourceManagerModule();
         virtual uint32_t getExceptionScenarioFlag(ExynosMPP *mpp) override;
-        bool mPerfTuneMode = false;
-        int32_t mPerfTuneState = PERF_TUNE_OFF;
         virtual void preAssignWindows() override;
 
     protected:
