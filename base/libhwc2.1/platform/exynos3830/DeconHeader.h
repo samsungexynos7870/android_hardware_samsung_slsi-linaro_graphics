@@ -117,10 +117,17 @@ struct decon_win_config {
   bool protection;
   bool compression;
 };
+struct decon_win_config_extra {
+    int remained_frames;
+    u32 reserved[7];
+};
 struct decon_win_config_data {
   int present_fence;
   int fd_odma;
+  /* vrefresh rate */
+  u32 fps;
   struct decon_win_config config[MAX_DECON_WIN + 2];
+  struct decon_win_config_extra extra;
 };
 struct decon_disp_info {
   enum hwc_ver ver;
