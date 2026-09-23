@@ -100,7 +100,7 @@ void ExynosDisplay::printDebugInfos(hwc_display_contents_1_t *contents)
         android::String8 result;
         result.clear();
         dumpLayerInfo(result);
-        ALOGD("%s", result.string());
+        ALOGD("%s", result.c_str());
 
         ALOGD("=======================  dump MPP config ================================");
         for (size_t i = 0; i < mLayerInfos.size(); i++) {
@@ -760,13 +760,13 @@ void ExynosDisplay::dumpLayerInfo(android::String8& result)
             if (mLayerInfos[i]->mInternalMPP == NULL)
                 result.appendFormat(" | [%3s, %2s]", "-", "-");
             else {
-                result.appendFormat(" | [%3s, %2d]", mLayerInfos[i]->mInternalMPP->getName().string(), mLayerInfos[i]->mInternalMPP->mIndex);
+                result.appendFormat(" | [%3s, %2d]", mLayerInfos[i]->mInternalMPP->getName().c_str(), mLayerInfos[i]->mInternalMPP->mIndex);
             }
 
             if (mLayerInfos[i]->mExternalMPP == NULL)
                 result.appendFormat(" | [%3s, %2s]", "-", "-");
             else {
-                result.appendFormat(" | [%3s, %2d]", mLayerInfos[i]->mExternalMPP->getName().string(), mLayerInfos[i]->mExternalMPP->mIndex);
+                result.appendFormat(" | [%3s, %2d]", mLayerInfos[i]->mExternalMPP->getName().c_str(), mLayerInfos[i]->mExternalMPP->mIndex);
             }
             result.append("\n");
         }
@@ -853,7 +853,7 @@ int ExynosDisplay::clearDisplay()
     int ret = ioctl(this->mDisplayFd, S3CFB_WIN_CONFIG, &win_data);
     LOG_ALWAYS_FATAL_IF(ret < 0,
             "%s ioctl S3CFB_WIN_CONFIG failed to clear screen: %s",
-            mDisplayName.string(), strerror(errno));
+            mDisplayName.c_str(), strerror(errno));
     // the causes of an empty config failing are all unrecoverable
 
     return win_data.fence;
@@ -2054,10 +2054,10 @@ int ExynosDisplay::postFrame(hwc_display_contents_1_t* contents)
                 android::String8 result;
                 DISPLAY_LOGE("window of layer %zu was not assigned (window_index: %d)", i, window_index);
                 dumpContents(result, contents);
-                ALOGE("%s", result.string());
+                ALOGE("%s", result.c_str());
                 result.clear();
                 dumpLayerInfo(result);
-                ALOGE("%s", result.string());
+                ALOGE("%s", result.c_str());
             }
             continue;
         }
@@ -2120,13 +2120,13 @@ int ExynosDisplay::postFrame(hwc_display_contents_1_t* contents)
                     result.appendFormat("window %zu configuration:\n", i);
                     dumpConfig(config[i], result);
                 }
-                ALOGE("%s", result.string());
+                ALOGE("%s", result.c_str());
                 result.clear();
                 dumpContents(result, contents);
-                ALOGE("%s", result.string());
+                ALOGE("%s", result.c_str());
                 result.clear();
                 dumpLayerInfo(result);
-                ALOGE("%s", result.string());
+                ALOGE("%s", result.c_str());
         }
 
         if (checkConfigChanged(*mWinData, mLastConfigData) == false) {
@@ -2904,7 +2904,7 @@ void ExynosDisplay::determineBandwidthSupport(hwc_display_contents_1_t *contents
             android::String8 result;
             result.clear();
             dumpLayerInfo(result);
-            DISPLAY_LOGE("%s", result.string());
+            DISPLAY_LOGE("%s", result.c_str());
             break;
         }
     } while(changed);
