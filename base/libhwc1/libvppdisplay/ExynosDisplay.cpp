@@ -2788,7 +2788,7 @@ void ExynosDisplay::determineBandwidthSupport(hwc_display_contents_1_t *contents
                     directFbNum++;
                 DISPLAY_LOGD(eDebugResourceAssigning, "layer(%zu) is directFB", i);
             } else if (can_compose && isOverlaySupported(layer, i,
-                        !isProcessingRequired(layer) |
+                        !isProcessingRequired(layer) ||
                         (directFbNum >= mInternalDMAs.size() && !(mUseSecureDMA && isTopLayer)),
                         &supportedInternalMPP, &supportedExternalMPP)) {
                 DISPLAY_LOGD(eDebugResourceAssigning, "layer(%zu) is OVERLAY ",i);
